@@ -19,8 +19,6 @@ namespace VipBroadcast
 
         public static Dictionary<Player, int> playerCooldowns = new Dictionary<Player, int>();
 
-        public List<Player> keysToRemove;
-
         public override void OnEnabled()
         {
             Instance = this;
