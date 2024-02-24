@@ -15,7 +15,7 @@ namespace VipBroadcast
     public class VipBroadcastCommand : ICommand
     {
         public string Command => "vipBroadcast";
-        public string[] Aliases => new string[0];
+        public string[] Aliases => ["vbc"];
         public string Description => "Allows certain people to broadcast to everyone with a cooldown.";
 
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
@@ -28,19 +28,19 @@ namespace VipBroadcast
 
             if (arguments.Count == 0)
             {
-                response = "You didn't specify a broadcast to send. Use .vipBroadcast <text>";
+                response = "You didn't specify a broadcast to send. Use .vbc <text>";
                 return false;
             }
 
-            if (VipBroadcast.playerCooldowns.ContainsKey(Player.Get(sender)))
+            if (VipBroadcast.Instance.IsOnCooldown(Player.Get(sender), out double remainingSeconds))
             {
-                response = "You are still on cooldown for this command. Time left: " + VipBroadcast.playerCooldowns[Player.Get(sender)];
+                response = "You are still on cooldown for this command. Time left: " + (int)remainingSeconds;
                 return false;
             }
 
-            VipBroadcast.playerCooldowns.Add(Player.Get(sender), VipBroadcast.Instance.Config.Cooldown);
+            VipBroadcast.Instance.PutOnCooldown(Player.Get(sender), TimeSpan.FromSeconds(VipBroadcast.Instance.Config.Cooldown));
 
-            Map.Broadcast(VipBroadcast.Instance.Config.Duration, "\"" + FormatArguments(arguments, 0) + "\"\n<i>- " + Player.Get(sender).Nickname + "</i>", Broadcast.BroadcastFlags.Normal, false);
+            Map.Broadcast(VipBroadcast.Instance.Config.Duration, VipBroadcast.Instance.Config.Message.Replace("%message%", FormatArguments(arguments, 0)).Replace("%player%", Player.Get(sender).Nickname), Broadcast.BroadcastFlags.Normal, false);
 
             response = "Broadcast sent!";
             return true;

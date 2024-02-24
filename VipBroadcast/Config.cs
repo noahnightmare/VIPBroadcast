@@ -18,5 +18,7 @@ namespace VipBroadcast
         public int Cooldown { get; set; } = 90;
         [Description("The duration of the broadcast sent.")]
         public ushort Duration { get; set; } = 10;
+        [Description("How the broadcast should be formatted. Use %message% for their message, and %player% for their nickname.")]
+        public string Message { get; set; } = "<b><color=yellow>[VIP Broadcast]</color></b> \"%message%\"\n<i>- %player%</i>";
     }
 }

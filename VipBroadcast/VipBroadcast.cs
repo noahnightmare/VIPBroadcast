@@ -14,16 +14,19 @@ namespace VipBroadcast
         public override string Author => "noahxo";
         public override string Name => "VipBroadcast";
         public override string Prefix => Name;
+        public override Version Version => new Version(1, 1, 0);
 
         public static VipBroadcast Instance;
 
-        public static Dictionary<Player, int> playerCooldowns = new Dictionary<Player, int>();
+        public static Dictionary<Player, DateTime> playerCooldowns;
+
+        public List<Player> keysToRemove;
 
         public override void OnEnabled()
         {
             Instance = this;
 
-            Timing.RunCoroutine(CooldownChecker());
+            playerCooldowns = new Dictionary<Player, DateTime>();
 
             base.OnEnabled();
         }
@@ -32,28 +35,26 @@ namespace VipBroadcast
         {
             Instance = null;
 
-            Timing.KillCoroutines();
+            playerCooldowns = null;
 
             base.OnDisabled();
         }
 
-        private IEnumerator<float> CooldownChecker()
+        public bool IsOnCooldown(Player sender, out double remainingSeconds)
         {
-            for (;;)
+            if (playerCooldowns.TryGetValue(sender, out var expiration) && expiration > DateTime.UtcNow) 
             {
-                yield return Timing.WaitForSeconds(1f);
-
-                // to list so we can modify the collection concurrently
-                foreach (KeyValuePair<Player, int> playerCooldown in playerCooldowns.ToList())
-                {
-                    playerCooldowns[playerCooldown.Key]--;
-
-                    if (playerCooldowns[playerCooldown.Key] == 0)
-                    {
-                        playerCooldowns.Remove(playerCooldown.Key);
-                    }
-                }
+                remainingSeconds = (expiration - DateTime.UtcNow).TotalSeconds;
+                return true;
             }
+
+            remainingSeconds = 0;
+            return false;
+        }
+
+        public void PutOnCooldown(Player key, TimeSpan duration)
+        {
+            playerCooldowns[key] = DateTime.UtcNow + duration;
         }
     }
 }
